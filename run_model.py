@@ -379,6 +379,65 @@ def predict_unprepared_data2(imagesPath,
         print 'average time for prediction: {} milliseconds'.format(avg_time_per_image)
 
 
+def predict_unprepared_for_explanation(image):
+    labelsFullPath = '/home/osboxes/Desktop/ML/Final_Project/Models/model2-trained/classes.txt'
+    modelFullPath = '/home/osboxes/Desktop/ML/Final_Project/Models/model2-trained/best_trained_model/my_model'
+    scale_image_size = (28, 28)
+    normalize_values = False
+    change_to_gray = True
+    smooth_factor = 1
+
+
+    # Gets labels
+    f = open(labelsFullPath, 'rb')
+    lines = f.readlines()
+    labels = [str(w).replace("\n", "") for w in lines]
+    f.close()
+
+    build_mnist_graph(len(labels))
+
+    f_log = open('/tmp/error_log_for_ML_delete.txt', 'w')
+    time_taken_list = list()
+
+    # Predicts image's labels with model
+    with tf.Session() as sess:
+        saver = tf.train.Saver()
+        saver.restore(sess, modelFullPath)
+        x = sess.graph.get_tensor_by_name('input_placeholder:0')
+        keep_prob = sess.graph.get_tensor_by_name('dropout_prob1:0')
+
+
+        results = sess.graph.get_tensor_by_name('final_result:0')
+
+        start_time = datetime.datetime.now()
+        image_data = dataset_utils.prepare_image(image=image,
+                                                 scale_image_size=scale_image_size,
+                                                 normalize_values=normalize_values,
+                                                 change_to_gray=change_to_gray,
+                                                 smooth_factor=smooth_factor)
+
+
+        scale_image_size = image_data.size
+
+        image_num_of_bytes = 1
+        for i in scale_image_size:
+            image_num_of_bytes *= i
+
+        new_shape = tuple([1, image_num_of_bytes])
+        image_data = np.array(image_data).reshape(new_shape)
+
+        predictions = sess.run(results,
+                               {x: image_data, keep_prob: 1.0})
+        predictions2 = np.squeeze(predictions)
+        top_k = predictions2.argsort()[-5:][::-1]  # Getting top 5 predictions
+        end_time = datetime.datetime.now()
+        time_taken = timedelta_milliseconds(end_time - start_time)
+        time_taken_list.append(time_taken)
+        print 'first guess: ' + SIGNS_DICT[int(labels[top_k[0]])], 'second guess: ' + SIGNS_DICT[int(labels[top_k[1]])]
+        return predictions
+
+
+
 def timedelta_milliseconds(td):
     return td.days*86400000 + td.seconds*1000 + td.microseconds/1000
 

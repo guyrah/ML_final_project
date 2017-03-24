@@ -5,6 +5,7 @@ import train_model
 MODE = 'TRAIN'
 MODE = 'TEST'
 MODE = 'PREDICT'
+MODE = 'EXPLAIN'
 
 model_path = '/home/osboxes/Desktop/ML/Final_Project/Models/model0-trained/best_trained_model/my_model'
 labels_path = '/home/osboxes/Desktop/ML/Final_Project/Models/model0-trained/classes.txt'
@@ -34,3 +35,6 @@ elif MODE == 'PREDICT':
     images_path = '/home/osboxes/Desktop/ML/Final_Project/Datasets/Pictures'
     actions.stream_predict_images(images_path=images_path, model_path=model_path, labels_path=labels_path)
     #actions.batch_predict_images(images_path=images_path, labels_path=labels_path, model_path=model_path, remove_tmp_if_exist=True)
+elif MODE == 'EXPLAIN':
+    image_path = '/home/osboxes/Desktop/ML/Final_Project/Datasets/Pictures/101.jpg'
+    actions.explain_prediction(image_path)

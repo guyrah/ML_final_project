@@ -3,6 +3,10 @@ import train_model
 import shutil
 import run_model
 import os
+import lime
+from lime import lime_image
+import time
+import tensorflow as tf
 
 def create_dataset_from_raw(src_path, dst_path, scale_image_size=(-1,-1), normalize_values=False, change_to_gray=False, smooth_factor=1, in_memory=False):
     '''
@@ -97,3 +101,16 @@ def stream_predict_images(images_path, labels_path, model_path):
                                        normalize_values=normalize_values,
                                        change_to_gray=change_to_gray,
                                        smooth_factor=smooth_factor)
+
+
+def explain_prediction(imagePath):
+    tmp = time.time()
+    #image_data = dataset_utils.load_image(imagePath, manipulateImage=False)
+    image_data = tf.image.decode_jpeg(open(imagePath).read(), channels=3)
+    image_data = tf.image.convert_image_dtype(image_data, dtype=tf.float64)
+
+    explainer = lime_image.LimeImageExplainer()
+    explanation = explainer.explain_instance(image_data, run_model.predict_unprepared_for_explanation, top_labels=2, hide_color=None, num_samples=1000)
+    #run_model.predict_unprepared_for_explanation(image_data)
+
+    print time.time() - tmp
